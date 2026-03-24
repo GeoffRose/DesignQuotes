@@ -1,29 +1,3 @@
-@property --gradient-1 {
-  syntax: "<color>";
-  inherits: false;
-  initial-value: #2a1a3e;
-}
-@property --gradient-2 {
-  syntax: "<color>";
-  inherits: false;
-  initial-value: #1a2a4e;
-}
-@property --gradient-3 {
-  syntax: "<color>";
-  inherits: false;
-  initial-value: #3e2a1a;
-}
-@property --gradient-4 {
-  syntax: "<color>";
-  inherits: false;
-  initial-value: #1a3e2a;
-}
-@property --gradient-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
 *,
 *::before,
 *::after {
@@ -33,11 +7,12 @@
 }
 
 :root {
-  --text-primary: rgba(255, 255, 255, 0.92);
-  --text-secondary: rgba(255, 255, 255, 0.58);
-  --text-tertiary: rgba(255, 255, 255, 0.32);
-  --transition-quote: 600ms;
-  --transition-gradient: 1200ms;
+  --black: #000;
+  --white: #fff;
+  --gray-light: rgba(0, 0, 0, 0.06);
+  --bar-height: 12px;
+  --gutter: 80px;
+  --transition-quote: 400ms;
 }
 
 html,
@@ -49,211 +24,99 @@ body {
 }
 
 body {
-  background-color: #111;
-  position: relative;
-}
-
-/* Gradient background */
-.gradient-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  transition:
-    --gradient-1 var(--transition-gradient) ease,
-    --gradient-2 var(--transition-gradient) ease,
-    --gradient-3 var(--transition-gradient) ease,
-    --gradient-4 var(--transition-gradient) ease,
-    --gradient-angle var(--transition-gradient) ease;
-  background:
-    radial-gradient(ellipse at 15% 20%, var(--gradient-1) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 25%, var(--gradient-2) 0%, transparent 50%),
-    radial-gradient(ellipse at 60% 80%, var(--gradient-3) 0%, transparent 55%),
-    radial-gradient(ellipse at 20% 75%, var(--gradient-4) 0%, transparent 50%),
-    linear-gradient(var(--gradient-angle), #0a0a0a 0%, #111 100%);
-  animation: mesh-drift 12s ease-in-out infinite alternate;
-}
-
-@keyframes mesh-drift {
-  0% {
-    --gradient-angle: 0deg;
-  }
-  100% {
-    --gradient-angle: 25deg;
-  }
-}
-
-/* Cursor spotlight */
-.spotlight {
-  --spotlight-x: 50vw;
-  --spotlight-y: 50vh;
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    600px circle at var(--spotlight-x) var(--spotlight-y),
-    rgba(255, 255, 255, 0.035) 0%,
-    transparent 100%
-  );
-  transition: opacity 0.3s ease;
+  background-color: var(--white);
 }
 
 /* Main layout */
 .container {
   position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   height: 100vh;
-  padding: 2rem;
+  overflow: hidden;
 }
 
-/* Card — overlapping layers */
-.card {
-  --parallax-x: 0px;
-  --parallax-y: 0px;
-  position: relative;
-  max-width: 780px;
+/* Thick horizontal bars */
+.bar {
+  flex-shrink: 0;
   width: 100%;
-  min-height: 420px;
+  height: var(--bar-height);
+  background: var(--black);
 }
 
-/* Background author watermark — deepest layer, moves opposite */
-.card-bg-author {
+/* Vertical grid lines */
+.grid-line {
   position: absolute;
-  bottom: -20px;
-  left: 10px;
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-weight: 800;
-  font-size: clamp(3.5rem, 8vw, 5rem);
-  color: var(--text-primary);
-  opacity: 0.025;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--black);
+  z-index: 1;
   pointer-events: none;
-  transform: translate(
-    calc(var(--parallax-x) * -1.5),
-    calc(var(--parallax-y) * -1.5)
-  );
-  transition:
-    opacity var(--transition-quote) ease;
 }
 
-.card-bg-author.fade-out {
-  opacity: 0;
+.grid-line-left {
+  left: var(--gutter);
 }
 
-/* Accent shape — mid layer */
-.card-accent {
-  position: absolute;
-  right: -30px;
-  bottom: -20px;
-  width: 240px;
-  height: 240px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  pointer-events: none;
-  transform: translate(
-    calc(var(--parallax-x) * -0.8),
-    calc(var(--parallax-y) * -0.8)
-  );
+.grid-line-right {
+  right: var(--gutter);
 }
 
-/* Main floating card — foreground layer */
-.card-main {
-  position: relative;
-  max-width: 680px;
-  width: 90%;
-  margin: 0 auto;
-  padding: 3rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 16px;
-  backdrop-filter: blur(40px) saturate(1.4);
-  -webkit-backdrop-filter: blur(40px) saturate(1.4);
-  box-shadow:
-    0 8px 48px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transform: translate(
-    calc(var(--parallax-x) * 1),
-    calc(var(--parallax-y) * 1)
-  );
-}
-
-/* Big quote mark — decorative, on the card */
-.card-quote-mark {
-  position: absolute;
-  top: 8px;
-  left: 28px;
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: 5rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  opacity: 0.06;
-  pointer-events: none;
-  line-height: 1;
-}
-
-/* Quote */
-.quote-wrapper {
-  position: relative;
-  margin-bottom: 1.5rem;
+/* Quote area */
+.quote-area {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  padding: clamp(2rem, 6vh, 5rem) calc(var(--gutter) + 24px);
+  padding-right: calc(var(--gutter) + 24px);
+  overflow: hidden;
 }
 
 .quote-text {
-  font-family: var(--font-serif), Georgia, serif;
-  font-weight: 500;
-  font-size: clamp(1.3rem, 2.6vw, 1.6rem);
-  line-height: 1.5;
-  color: var(--text-primary);
-  font-style: italic;
-  letter-spacing: -0.01em;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 900;
+  font-size: clamp(2rem, 5vw, 3.8rem);
+  line-height: 1.12;
+  color: var(--black);
+  letter-spacing: -0.02em;
+  max-width: 900px;
   transition:
     opacity var(--transition-quote) ease,
     transform var(--transition-quote) ease;
 }
 
-.quote-text::before {
-  content: "\201C";
-  font-style: normal;
-  font-size: 1.15em;
-  margin-right: 0.05em;
-}
-.quote-text::after {
-  content: "\201D";
-  font-style: normal;
-  font-size: 1.15em;
-  margin-left: 0.05em;
-}
-
 .quote-text.fade-out {
   opacity: 0;
-  transform: translateY(-12px);
-}
-.quote-text.fade-in {
-  opacity: 0;
-  transform: translateY(12px);
+  transform: translateY(-10px);
 }
 
-/* Author — below divider on card */
-.card-divider {
-  width: 48px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.2);
-  margin-bottom: 0.75rem;
+/* Bottom section */
+.bottom-section {
+  flex-shrink: 0;
+  padding: 0 calc(var(--gutter) + 24px);
+}
+
+.divider-line {
+  width: 100%;
+  height: 2px;
+  background: var(--black);
+}
+
+.bottom-content {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 1.25rem 0 1.5rem;
 }
 
 .author-name {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-weight: 500;
-  font-size: 0.7rem;
-  color: var(--text-primary);
-  opacity: 0.45;
+  font-size: 0.8rem;
+  color: var(--black);
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.35em;
   transition:
     opacity var(--transition-quote) ease,
     transform var(--transition-quote) ease;
@@ -261,75 +124,81 @@ body {
 
 .author-name.fade-out {
   opacity: 0;
-  transform: translateY(-8px);
-}
-.author-name.fade-in {
-  opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(-6px);
 }
 
-/* Controls — static bar pinned to bottom of viewport */
+.quote-number {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 900;
+  font-size: clamp(4rem, 10vw, 7rem);
+  line-height: 0.8;
+  color: rgba(0, 0, 0, 0.06);
+  letter-spacing: -0.02em;
+  transition: opacity var(--transition-quote) ease;
+}
+
+.quote-number.fade-out {
+  opacity: 0;
+}
+
+/* Controls */
 .controls {
   position: fixed;
-  bottom: 2rem;
+  bottom: calc(var(--bar-height) + 16px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   z-index: 10;
-  padding: 0.6rem 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(20px) saturate(1.2);
-  -webkit-backdrop-filter: blur(20px) saturate(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 100px;
+  padding: 0.4rem 0.75rem;
+  background: var(--white);
+  border: 2px solid var(--black);
+  border-radius: 0;
 }
 
 .nav-btn {
   background: none;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--text-secondary);
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+  border: 2px solid var(--black);
+  color: var(--black);
+  width: 34px;
+  height: 34px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition:
-    background 0.25s,
-    color 0.25s,
-    border-color 0.25s;
+    background 0.2s,
+    color 0.2s;
   font-size: 0;
   flex-shrink: 0;
 }
+
 .nav-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--black);
+  color: var(--white);
 }
+
 .nav-btn:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline: 2px solid var(--black);
   outline-offset: 2px;
 }
 
 .nav-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  stroke-width: 2.5;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
 }
 
 /* Progress bar */
 .progress-track {
-  width: 120px;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 1px;
+  width: 100px;
+  height: 3px;
+  background: var(--gray-light);
   overflow: hidden;
   position: relative;
 }
@@ -337,8 +206,7 @@ body {
 .progress-bar {
   height: 100%;
   width: 0%;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 1px;
+  background: var(--black);
   transition: width 0.1s linear;
 }
 
@@ -354,20 +222,19 @@ body {
 /* Counter */
 .counter {
   font-size: 0.65rem;
-  color: var(--text-tertiary);
+  font-weight: 500;
+  color: var(--black);
   letter-spacing: 0.1em;
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
+  opacity: 0.4;
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .gradient-layer {
-    animation: none !important;
-    transition-duration: 0ms !important;
-  }
   .quote-text,
-  .author-name {
+  .author-name,
+  .quote-number {
     transition-duration: 0ms !important;
   }
   .progress-bar,
@@ -375,50 +242,37 @@ body {
     transition-duration: 0ms !important;
   }
   .quote-text.fade-out,
-  .quote-text.fade-in,
-  .author-name.fade-out,
-  .author-name.fade-in {
-    transform: none !important;
-  }
-  .spotlight {
-    display: none;
-  }
-  .card-bg-author,
-  .card-accent,
-  .card-main {
+  .author-name.fade-out {
     transform: none !important;
   }
 }
 
 /* Responsive */
 @media (max-width: 700px) {
-  .card {
-    min-height: 320px;
+  :root {
+    --gutter: 32px;
+    --bar-height: 8px;
   }
-  .card-main {
-    width: 95%;
-    padding: 2rem 1.5rem;
-  }
-  .card-bg-author {
-    font-size: 2.5rem;
-    left: 10px;
-  }
-  .card-accent {
-    width: 140px;
-    height: 140px;
-  }
-  .controls {
-    bottom: 1.25rem;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-  }
-  .progress-track {
-    width: 80px;
-  }
-}
 
-@media (max-width: 380px) {
-  .card-main {
-    padding: 1.5rem 1.25rem;
+  .quote-area {
+    padding: 2rem calc(var(--gutter) + 16px);
+  }
+
+  .bottom-section {
+    padding: 0 calc(var(--gutter) + 16px);
+  }
+
+  .bottom-content {
+    padding: 1rem 0 1.25rem;
+  }
+
+  .controls {
+    bottom: calc(var(--bar-height) + 10px);
+    gap: 0.35rem;
+    padding: 0.3rem 0.5rem;
+  }
+
+  .progress-track {
+    width: 60px;
   }
 }

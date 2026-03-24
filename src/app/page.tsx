@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { quotes, type ColorPalette } from "@/data/quotes";
+import { quotes } from "@/data/quotes";
 
 const AUTOPLAY_INTERVAL = 8000;
-const FADE_DURATION = 500;
+const FADE_DURATION = 400;
 
 export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -17,72 +17,17 @@ export default function Home() {
   >("running");
   const [pausedWidth, setPausedWidth] = useState(0);
 
-  const gradientRef = useRef<HTMLDivElement>(null);
-  const spotlightRef = useRef<HTMLDivElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const progressTrackRef = useRef<HTMLDivElement>(null);
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isTransitioning = useRef(false);
   const reducedMotion = useRef(false);
-  const animationFrameId = useRef<number>(0);
-  const mouseTarget = useRef({ x: 0, y: 0 });
-  const smoothedPos = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     reducedMotion.current = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
   }, []);
-
-  // Cursor spotlight + parallax effect
-  useEffect(() => {
-    if (reducedMotion.current) return;
-    const spotlightEl = spotlightRef.current;
-    const cardEl = cardRef.current;
-    if (!spotlightEl) return;
-
-    const handleMove = (e: MouseEvent) => {
-      mouseTarget.current = { x: e.clientX, y: e.clientY };
-    };
-
-    const animate = () => {
-      smoothedPos.current.x += (mouseTarget.current.x - smoothedPos.current.x) * 0.08;
-      smoothedPos.current.y += (mouseTarget.current.y - smoothedPos.current.y) * 0.08;
-      spotlightEl.style.setProperty("--spotlight-x", `${smoothedPos.current.x}px`);
-      spotlightEl.style.setProperty("--spotlight-y", `${smoothedPos.current.y}px`);
-
-      // Parallax: map mouse position to -1..1 range from viewport center
-      if (cardEl) {
-        const px = (smoothedPos.current.x / window.innerWidth - 0.5) * 2;
-        const py = (smoothedPos.current.y / window.innerHeight - 0.5) * 2;
-        cardEl.style.setProperty("--parallax-x", `${px * 30}px`);
-        cardEl.style.setProperty("--parallax-y", `${py * 20}px`);
-      }
-
-      animationFrameId.current = requestAnimationFrame(animate);
-    };
-
-    document.addEventListener("mousemove", handleMove);
-    animationFrameId.current = requestAnimationFrame(animate);
-
-    return () => {
-      document.removeEventListener("mousemove", handleMove);
-      cancelAnimationFrame(animationFrameId.current);
-    };
-  }, []);
-
-  const setPalette = useCallback(
-    (palette: ColorPalette) => {
-      const gradientEl = gradientRef.current;
-      if (!gradientEl) return;
-      gradientEl.style.setProperty("--gradient-1", palette[0]);
-      gradientEl.style.setProperty("--gradient-2", palette[1]);
-      gradientEl.style.setProperty("--gradient-3", palette[2]);
-      gradientEl.style.setProperty("--gradient-4", palette[3]);
-    },
-    []
-  );
 
   const startProgress = useCallback(() => {
     setProgressState("reset");
@@ -104,7 +49,6 @@ export default function Home() {
       const fadeDuration = reducedMotion.current ? 0 : FADE_DURATION;
 
       setIsFading(true);
-      setPalette(quote.palette);
 
       setTimeout(() => {
         setCurrentIndex(nextIndex);
@@ -113,7 +57,7 @@ export default function Home() {
         isTransitioning.current = false;
       }, fadeDuration);
     },
-    [setPalette]
+    []
   );
 
   const resetAutoplay = useCallback(
@@ -164,17 +108,14 @@ export default function Home() {
     }, fadeDuration);
   }, [currentIndex, goTo, resetAutoplay]);
 
-  // Randomize starting quote after mount to avoid hydration mismatch
   useEffect(() => {
     const startIndex = Math.floor(Math.random() * quotes.length);
     setCurrentIndex(startIndex);
     setDisplayedQuote(quotes[startIndex]);
-    setPalette(quotes[startIndex].palette);
     setMounted(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Autoplay — start after mount so the randomized index is used
   useEffect(() => {
     if (!mounted || isPaused) return;
     resetAutoplay();
@@ -184,7 +125,6 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === "ArrowDown") {
@@ -200,7 +140,6 @@ export default function Home() {
     return () => document.removeEventListener("keydown", handleKey);
   }, [next, prev]);
 
-  // Touch swipe
   const touchStartX = useRef(0);
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -215,11 +154,9 @@ export default function Home() {
     [next, prev]
   );
 
-  // Hover pause
   const handleMouseEnter = useCallback(() => {
     setIsPaused(true);
     if (autoplayRef.current) clearTimeout(autoplayRef.current);
-    // Capture current progress width
     const bar = progressBarRef.current;
     const track = progressTrackRef.current;
     if (bar && track) {
@@ -255,104 +192,90 @@ export default function Home() {
         ? { width: "0%" }
         : {};
 
+  const quoteNumber = String(currentIndex + 1).padStart(2, "0");
+
   return (
-    <>
-      <div className="gradient-layer" ref={gradientRef} aria-hidden="true" />
-      <div className="spotlight" ref={spotlightRef} aria-hidden="true" />
-      <main className="container" role="main">
-        <div
-          className="card"
-          ref={cardRef}
-          aria-live="polite"
-          aria-atomic="true"
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Deepest layer: large faded author name */}
-          <p
-            className={`card-bg-author ${isFading ? "fade-out" : ""}`}
+    <main
+      className="container"
+      role="main"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Top bar */}
+      <div className="bar bar-top" aria-hidden="true" />
+
+      {/* Vertical grid lines */}
+      <div className="grid-line grid-line-left" aria-hidden="true" />
+      <div className="grid-line grid-line-right" aria-hidden="true" />
+
+      {/* Quote area */}
+      <div className="quote-area" aria-live="polite" aria-atomic="true">
+        <p className={`quote-text ${isFading ? "fade-out" : ""}`}>
+          {displayedQuote.text.toUpperCase()}
+        </p>
+      </div>
+
+      {/* Bottom section */}
+      <div className="bottom-section">
+        <div className="divider-line" aria-hidden="true" />
+        <div className="bottom-content">
+          <p className={`author-name ${isFading ? "fade-out" : ""}`}>
+            {displayedQuote.author.toUpperCase()}
+          </p>
+          <span
+            className={`quote-number ${isFading ? "fade-out" : ""}`}
             aria-hidden="true"
           >
-            {displayedQuote.author}
-          </p>
-
-          {/* Mid layer: accent shape */}
-          <div className="card-accent" aria-hidden="true" />
-
-          {/* Foreground: floating card */}
-          <div
-            className="card-main"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          >
-            <span className="card-quote-mark" aria-hidden="true">
-              {"\u201C"}
-            </span>
-            <div className="quote-wrapper">
-              <p className={`quote-text ${isFading ? "fade-out" : ""}`}>
-                {displayedQuote.text}
-              </p>
-            </div>
-            <div className="card-divider" />
-            <p className={`author-name ${isFading ? "fade-out" : ""}`}>
-              {displayedQuote.author}
-            </p>
-          </div>
-        </div>
-
-        {/* Static controls — pinned to bottom of viewport */}
-        <nav className="controls" aria-label="Quote navigation">
-          <button
-            className="nav-btn"
-            onClick={prev}
-            aria-label="Previous quote"
-          >
-            <svg viewBox="0 0 24 24">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
-          <button
-            className="nav-btn"
-            onClick={next}
-            aria-label="Next quote"
-          >
-            <svg viewBox="0 0 24 24">
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-          <button
-            className="nav-btn"
-            onClick={shuffle}
-            aria-label="Random quote"
-          >
-            <svg viewBox="0 0 24 24">
-              <polyline points="16 3 21 3 21 8" />
-              <line x1="4" y1="20" x2="21" y2="3" />
-              <polyline points="21 16 21 21 16 21" />
-              <line x1="15" y1="15" x2="21" y2="21" />
-              <line x1="4" y1="4" x2="9" y2="9" />
-            </svg>
-          </button>
-          <div
-            className="progress-track"
-            ref={progressTrackRef}
-            role="progressbar"
-            aria-label="Auto-advance timer"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={0}
-          >
-            <div
-              className={progressClassName}
-              ref={progressBarRef}
-              style={progressStyle}
-            />
-          </div>
-          <span className="counter" aria-hidden="true">
-            {currentIndex + 1} / {quotes.length}
+            {quoteNumber}
           </span>
-        </nav>
-      </main>
-    </>
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="bar bar-bottom" aria-hidden="true" />
+
+      {/* Controls */}
+      <nav className="controls" aria-label="Quote navigation">
+        <button className="nav-btn" onClick={prev} aria-label="Previous quote">
+          <svg viewBox="0 0 24 24">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <button className="nav-btn" onClick={next} aria-label="Next quote">
+          <svg viewBox="0 0 24 24">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+        <button className="nav-btn" onClick={shuffle} aria-label="Random quote">
+          <svg viewBox="0 0 24 24">
+            <polyline points="16 3 21 3 21 8" />
+            <line x1="4" y1="20" x2="21" y2="3" />
+            <polyline points="21 16 21 21 16 21" />
+            <line x1="15" y1="15" x2="21" y2="21" />
+            <line x1="4" y1="4" x2="9" y2="9" />
+          </svg>
+        </button>
+        <div
+          className="progress-track"
+          ref={progressTrackRef}
+          role="progressbar"
+          aria-label="Auto-advance timer"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={0}
+        >
+          <div
+            className={progressClassName}
+            ref={progressBarRef}
+            style={progressStyle}
+          />
+        </div>
+        <span className="counter" aria-hidden="true">
+          {currentIndex + 1} / {quotes.length}
+        </span>
+      </nav>
+    </main>
   );
 }
