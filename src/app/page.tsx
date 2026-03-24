@@ -19,6 +19,7 @@ export default function Home() {
 
   const gradientRef = useRef<HTMLDivElement>(null);
   const spotlightRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const progressTrackRef = useRef<HTMLDivElement>(null);
   const autoplayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -34,10 +35,11 @@ export default function Home() {
     ).matches;
   }, []);
 
-  // Cursor spotlight effect
+  // Cursor spotlight + parallax effect
   useEffect(() => {
     if (reducedMotion.current) return;
     const spotlightEl = spotlightRef.current;
+    const cardEl = cardRef.current;
     if (!spotlightEl) return;
 
     const handleMove = (e: MouseEvent) => {
@@ -49,6 +51,15 @@ export default function Home() {
       smoothedPos.current.y += (mouseTarget.current.y - smoothedPos.current.y) * 0.08;
       spotlightEl.style.setProperty("--spotlight-x", `${smoothedPos.current.x}px`);
       spotlightEl.style.setProperty("--spotlight-y", `${smoothedPos.current.y}px`);
+
+      // Parallax: map mouse position to -1..1 range from viewport center
+      if (cardEl) {
+        const px = (smoothedPos.current.x / window.innerWidth - 0.5) * 2;
+        const py = (smoothedPos.current.y / window.innerHeight - 0.5) * 2;
+        cardEl.style.setProperty("--parallax-x", `${px * 30}px`);
+        cardEl.style.setProperty("--parallax-y", `${py * 20}px`);
+      }
+
       animationFrameId.current = requestAnimationFrame(animate);
     };
 
@@ -251,77 +262,96 @@ export default function Home() {
       <main className="container" role="main">
         <div
           className="card"
+          ref={cardRef}
           aria-live="polite"
           aria-atomic="true"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="card-left">
+          {/* Deepest layer: large faded author name */}
+          <p
+            className={`card-bg-author ${isFading ? "fade-out" : ""}`}
+            aria-hidden="true"
+          >
+            {displayedQuote.author}
+          </p>
+
+          {/* Mid layer: accent shape */}
+          <div className="card-accent" aria-hidden="true" />
+
+          {/* Foreground: floating card */}
+          <div
+            className="card-main"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            <span className="card-quote-mark" aria-hidden="true">
+              {"\u201C"}
+            </span>
             <div className="quote-wrapper">
               <p className={`quote-text ${isFading ? "fade-out" : ""}`}>
                 {displayedQuote.text}
               </p>
             </div>
-            <nav className="nav" aria-label="Quote navigation">
-              <button
-                className="nav-btn"
-                onClick={prev}
-                aria-label="Previous quote"
-              >
-                <svg viewBox="0 0 24 24">
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </button>
-              <button
-                className="nav-btn"
-                onClick={next}
-                aria-label="Next quote"
-              >
-                <svg viewBox="0 0 24 24">
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
-              </button>
-              <button
-                className="nav-btn"
-                onClick={shuffle}
-                aria-label="Random quote"
-              >
-                <svg viewBox="0 0 24 24">
-                  <polyline points="16 3 21 3 21 8" />
-                  <line x1="4" y1="20" x2="21" y2="3" />
-                  <polyline points="21 16 21 21 16 21" />
-                  <line x1="15" y1="15" x2="21" y2="21" />
-                  <line x1="4" y1="4" x2="9" y2="9" />
-                </svg>
-              </button>
-              <div
-                className="progress-track"
-                ref={progressTrackRef}
-                role="progressbar"
-                aria-label="Auto-advance timer"
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-valuenow={0}
-              >
-                <div
-                  className={progressClassName}
-                  ref={progressBarRef}
-                  style={progressStyle}
-                />
-              </div>
-              <span className="counter" aria-hidden="true">
-                {currentIndex + 1} / {quotes.length}
-              </span>
-            </nav>
-          </div>
-          <div className="card-right">
+            <div className="card-divider" />
             <p className={`author-name ${isFading ? "fade-out" : ""}`}>
               {displayedQuote.author}
             </p>
           </div>
         </div>
+
+        {/* Static controls — pinned to bottom of viewport */}
+        <nav className="controls" aria-label="Quote navigation">
+          <button
+            className="nav-btn"
+            onClick={prev}
+            aria-label="Previous quote"
+          >
+            <svg viewBox="0 0 24 24">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
+          <button
+            className="nav-btn"
+            onClick={next}
+            aria-label="Next quote"
+          >
+            <svg viewBox="0 0 24 24">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </button>
+          <button
+            className="nav-btn"
+            onClick={shuffle}
+            aria-label="Random quote"
+          >
+            <svg viewBox="0 0 24 24">
+              <polyline points="16 3 21 3 21 8" />
+              <line x1="4" y1="20" x2="21" y2="3" />
+              <polyline points="21 16 21 21 16 21" />
+              <line x1="15" y1="15" x2="21" y2="21" />
+              <line x1="4" y1="4" x2="9" y2="9" />
+            </svg>
+          </button>
+          <div
+            className="progress-track"
+            ref={progressTrackRef}
+            role="progressbar"
+            aria-label="Auto-advance timer"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={0}
+          >
+            <div
+              className={progressClassName}
+              ref={progressBarRef}
+              style={progressStyle}
+            />
+          </div>
+          <span className="counter" aria-hidden="true">
+            {currentIndex + 1} / {quotes.length}
+          </span>
+        </nav>
       </main>
     </>
   );
